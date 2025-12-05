@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>升级进度条游戏</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #2196F3;
+            --accent-color: #FF9800;
+            --dark-color: #333;
+            --light-color: #f5f5f5;
+            --white: #ffffff;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --border-radius: 10px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark-color);
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin: 20px 0;
+            transition: transform 0.3s ease;
+        }
+        
+        .container:hover {
+            transform: translateY(-5px);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat:hover {
+            transform: translateY(-3px);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .diamond-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 35px;
+            background-color: #e0e0e0;
+            border-radius: 17px;
+            margin: 25px 0;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary-color), #8BC34A);
+            border-radius: 17px;
+            transition: width 0.5s ease, background-color 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .info-panel {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: var(--shadow);
+        }
+        
+        .click-button {
+            width: 100%;
+            max-width: 300px;
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px auto;
+            display: block;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .click-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .click-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .click-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%, -50%);
+            transform-origin: 50% 50%;
+        }
+        
+        .click-button:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+        
+        .shop-button {
+            background: linear-gradient(135deg, var(--accent-color), #F57C00);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .shop-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .shop-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .level-up {
+            animation: levelUp 0.5s ease;
+        }
+        
+        .power-up {
+            animation: powerUp 0.5s ease;
+        }
+        
+        .diamond-reward {
+            animation: diamondReward 0.5s ease;
+        }
+        
+        @keyframes levelUp {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes powerUp {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); color: gold; }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes diamondReward {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); color: var(--secondary-color); }
+            100% { transform: scale(1); }
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-color);
+            opacity: 0;
+        }
+        
+        .shop-info {
+            background-color: var(--white);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: var(--shadow);
+        }
+        
+        .shop-info h3 {
+            color: var(--dark-color);
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+        
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+        }
+        
+        .shop-item:hover {
+            background-color: var(--white);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .reward-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--secondary-color);
+            color: var(--white);
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .hold-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-color), #FF5722);
+            border-radius: 0 0 50px 50px;
+            transition: width 0.1s linear;
+        }
+        
+        .hold-notification {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--accent-color);
+            color: var(--white);
+            padding: 5px 15px;
+            border-radius: 50px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(255, 152, 0, 0.3);
+        }
+        
+        .admin-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--white);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            display: none;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .admin-panel h3 {
+            color: var(--dark-color);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+        
+        .admin-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+        
+        .admin-button {
+            background: linear-gradient(135deg, var(--primary-color), #45a049);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .admin-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .admin-close {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+        
+        .admin-close:hover {
+            background: linear-gradient(135deg, #e53935, #c62828);
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+            backdrop-filter: blur(5px);
+        }
+        
+        .reset-button {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px auto;
+            display: block;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .reset-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .stat {
+                padding: 10px;
+            }
+            
+            .stat-value, .diamond-value {
+                font-size: 1.5rem;
+            }
+            
+            .click-button {
+                padding: 12px 24px;
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>升级进度条游戏</h1>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="levelDisplay">1</div>
+                <div class="stat-label">等级</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="progressDisplay">0%</div>
+                <div class="stat-label">进度</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="clicksDisplay">0</div>
+                <div class="stat-label">点击次数</div>
+            </div>
+            <div class="stat">
+                <div class="diamond-value" id="diamondDisplay">0</div>
+                <div class="stat-label">钻石</div>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+        
+        <div class="info-panel">
+            <div class="bonus-info" id="bonusInfo">
+                当前点击收益: <span id="clickValue">1</span> 点
+            </div>
+            
+            <div class="milestone-info" id="milestoneInfo">
+                距离下次收益提升: <span id="nextBonusLevel">5</span> 级
+            </div>
+            
+            <div class="active-boost" id="activeBoostInfo" style="display: none;">
+                当前生效增益: <span id="boostDescription"></span>, 剩余点击: <span id="boostRemaining">0</span>
+            </div>
+        </div>
+        
+        <button class="click-button" id="clickButton">
+            <div class="hold-progress" id="holdProgress"></div>
+            <div class="hold-notification" id="holdNotification">长按3秒</div>
+            点击升级
+        </button>
+        
+        <button class="reset-button" id="resetButton">重置游戏</button>
+        
+        <div class="shop-info">
+            <h3>商店</h3>
+            <div class="shop-item">
+                <span>收益翻倍卡 (10钻石)</span>
+                <button class="shop-button" id="doubleCardButton">购买</button>
+            </div>
+            <div class="shop-item">
+                <span>积分卡 (100钻石)</span>
+                <button class="shop-button" id="pointsCardButton">购买</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    
+    <div class="admin-panel" id="adminPanel">
+        <h3>管理员模式</h3>
+        <input type="text" class="admin-input" id="adminCommand" placeholder="输入管理员命令">
+        <div>
+            <button class="admin-button" id="executeCommand">执行</button>
+            <button class="admin-button admin-close" id="closeAdmin">关闭</button>
+        </div>
+    </div>
+
+    <div class="reward-notification" id="rewardNotification"></div>
+
+    <script>
+        // 游戏状态
+        let gameState = {
+            level: 1,
+            progress: 0,
+            clicks: 0,
+            diamonds: 0,
+            maxProgress: 100,
+            clickValue: 1,
+            doubleCardActive: false,
+            doubleCardRemaining: 0,
+            originalClickValue: 1
+        };
+        
+        // 长按状态
+        let isHolding = false;
+        let holdStartTime = 0;
+        let holdInterval = null;
+        const holdThreshold = 3000; // 3秒长按阈值
+        
+        // CPS计算相关
+        let clickTimestamps = [];
+        let cps = 0;
+        const cpsWindow = 5; // 计算CPS的时间窗口(秒)
+        
+        // 管理员模式状态
+        let adminMode = false;
+        
+        // DOM元素
+        const levelDisplay = document.getElementById('levelDisplay');
+        const progressDisplay = document.getElementById('progressDisplay');
+        const clicksDisplay = document.getElementById('clicksDisplay');
+        const diamondDisplay = document.getElementById('diamondDisplay');
+        const progressBar = document.getElementById('progressBar');
+        const clickButton = document.getElementById('clickButton');
+        const bonusInfo = document.getElementById('bonusInfo');
+        const clickValueDisplay = document.getElementById('clickValue');
+        const milestoneInfo = document.getElementById('milestoneInfo');
+        const nextBonusLevelDisplay = document.getElementById('nextBonusLevel');
+        const rewardNotification = document.getElementById('rewardNotification');
+        const doubleCardButton = document.getElementById('doubleCardButton');
+        const pointsCardButton = document.getElementById('pointsCardButton');
+        const activeBoostInfo = document.getElementById('activeBoostInfo');
+        const boostDescription = document.getElementById('boostDescription');
+        const boostRemaining = document.getElementById('boostRemaining');
+        const holdProgress = document.getElementById('holdProgress');
+        const holdNotification = document.getElementById('holdNotification');
+        const overlay = document.getElementById('overlay');
+        const adminPanel = document.getElementById('adminPanel');
+        const adminCommand = document.getElementById('adminCommand');
+        const executeCommand = document.getElementById('executeCommand');
+        const closeAdmin = document.getElementById('closeAdmin');
+        const resetButton = document.getElementById('resetButton');
+        
+        // 从localStorage加载游戏状态
+        function loadGameState() {
+            const savedState = localStorage.getItem('progressGameState');
+            if (savedState) {
+                gameState = JSON.parse(savedState);
+                updateDisplay();
+                showRewardNotification(0, "游戏进度已加载");
+            }
+        }
+        
+        // 保存游戏状态到localStorage
+        function saveGameState() {
+            localStorage.setItem('progressGameState', JSON.stringify(gameState));
+        }
+        
+        // 重置游戏状态
+        function resetGameState() {
+            gameState = {
+                level: 1,
+                progress: 0,
+                clicks: 0,
+                diamonds: 0,
+                maxProgress: 100,
+                clickValue: 1,
+                doubleCardActive: false,
+                doubleCardRemaining: 0,
+                originalClickValue: 1
+            };
+            localStorage.removeItem('progressGameState');
+            updateDisplay();
+            showRewardNotification(0, "游戏已重置");
+        }
+        
+        // 更新显示
+        function updateDisplay() {
+            levelDisplay.textContent = gameState.level;
+            progressDisplay.textContent = `${gameState.progress}%`;
+            clicksDisplay.textContent = gameState.clicks;
+            diamondDisplay.textContent = gameState.diamonds;
+            progressBar.style.width = `${(gameState.progress / gameState.maxProgress) * 100}%`;
+            progressBar.textContent = `${gameState.progress}%`;
+            clickValueDisplay.textContent = gameState.clickValue;
+            
+            // 计算距离下次收益提升的等级
+            const nextBonusLevel = Math.ceil(gameState.level / 5) * 5;
+            nextBonusLevelDisplay.textContent = nextBonusLevel;
+            
+            // 更新商店按钮状态
+            doubleCardButton.disabled = gameState.diamonds < 10;
+            pointsCardButton.disabled = gameState.diamonds < 100;
+            
+            // 更新增益信息显示
+            if (gameState.doubleCardActive) {
+                activeBoostInfo.style.display = "block";
+                boostDescription.textContent = "收益翻倍";
+                boostRemaining.textContent = gameState.doubleCardRemaining;
+            } else {
+                activeBoostInfo.style.display = "none";
+            }
+            
+            // 更新长按提示显示
+            if (gameState.level >= 100) {
+                holdNotification.style.opacity = 1;
+            } else {
+                holdNotification.style.opacity = 0;
+            }
+            
+            // 进度条颜色变化
+            if (gameState.progress / gameState.maxProgress < 0.3) {
+                progressBar.style.background = "linear-gradient(90deg, #4CAF50, #8BC34A)";
+            } else if (gameState.progress / gameState.maxProgress < 0.7) {
+                progressBar.style.background = "linear-gradient(90deg, #8BC34A, #CDDC39)";
+            } else {
+                progressBar.style.background = "linear-gradient(90deg, #CDDC39, #FFEB3B)";
+            }
+            
+            // 自动保存游戏状态
+            saveGameState();
+        }
+        
+        // 计算CPS
+        function calculateCPS() {
+            const now = Date.now();
+            // 移除超过时间窗口的点击记录
+            clickTimestamps = clickTimestamps.filter(timestamp => now - timestamp < cpsWindow * 1000);
+            // 计算CPS
+            cps = clickTimestamps.length / cpsWindow;
+        }
+        
+        // 显示奖励通知
+        function showRewardNotification(amount, message) {
+            rewardNotification.textContent = message || `恭喜获得 ${amount} 钻石！`;
+            rewardNotification.style.opacity = 1;
+            
+            setTimeout(() => {
+                rewardNotification.style.opacity = 0;
+            }, 2000);
+        }
+        
+        // 处理奖励掉落
+        function handleRewardDrop() {
+            const random = Math.random();
+            let reward = 0;
+            
+            if (random < 0.1) { // 10% 概率获得100钻石
+                reward = 100;
+            } else if (random < 0.4) { // 30% 概率获得50钻石
+                reward = 50;
+            } else if (random < 0.9) { // 50% 概率获得10钻石
+                reward = 10;
+            }
+            
+            if (reward > 0) {
+                gameState.diamonds += reward;
+                showRewardNotification(reward);
+                diamondDisplay.classList.add('diamond-reward');
+                setTimeout(() => {
+                    diamondDisplay.classList.remove('diamond-reward');
+                }, 500);
+            }
+        }
+        
+        // 激活收益翻倍卡
+        function activateDoubleCard() {
+            if (gameState.doubleCardActive) return;
+            
+            gameState.diamonds -= 10;
+            gameState.doubleCardActive = true;
+            gameState.doubleCardRemaining = 20;
+            gameState.originalClickValue = gameState.clickValue;
+            gameState.clickValue *= 2;
+            
+            showRewardNotification(0, "收益翻倍卡已激活！");
+            updateDisplay();
+        }
+        
+        // 使用积分卡
+        function usePointsCard() {
+            gameState.diamonds -= 100;
+            gameState.progress += 100;
+            
+            // 检查是否超过最大进度
+            if (gameState.progress >= gameState.maxProgress) {
+                gameState.progress = gameState.maxProgress;
+            }
+            
+            showRewardNotification(0, "获得100积分！");
+            updateDisplay();
+        }
+        
+        // 处理长按开始
+        function handleHoldStart() {
+            if (gameState.level < 100) {
+                handleClick();
+                return;
+            }
+            
+            isHolding = true;
+            holdStartTime = Date.now();
+            holdProgress.style.width = "0%";
+            
+            holdInterval = setInterval(() => {
+                const elapsed = Date.now() - holdStartTime;
+                const progress = Math.min(100, (elapsed / holdThreshold) * 100);
+                holdProgress.style.width = `${progress}%`;
+                
+                if (elapsed >= holdThreshold) {
+                    clearInterval(holdInterval);
+                    handleClick();
+                    isHolding = false;
+                    holdProgress.style.width = "0%";
+                }
+            }, 10);
+        }
+        
+        // 处理长按结束
+        function handleHoldEnd() {
+            if (!isHolding || gameState.level < 100) return;
+            
+            clearInterval(holdInterval);
+            isHolding = false;
+            holdProgress.style.width = "0%";
+        }
+        
+        // 处理点击
+        function handleClick() {
+            const now = Date.now();
+            gameState.clicks++;
+            gameState.progress += gameState.clickValue;
+            clickTimestamps.push(now);
+            calculateCPS();
+            
+            // 处理收益翻倍卡效果
+            if (gameState.doubleCardActive) {
+                gameState.doubleCardRemaining--;
+                if (gameState.doubleCardRemaining <= 0) {
+                    gameState.doubleCardActive = false;
+                    gameState.clickValue = gameState.originalClickValue;
+                    showRewardNotification(0, "收益翻倍卡效果已结束");
+                }
+            }
+            
+            // 检查是否达到最大进度
+            if (gameState.progress >= gameState.maxProgress) {
+                gameState.level++;
+                gameState.progress = 0;
+                gameState.maxProgress = Math.floor(gameState.maxProgress * 1.2); // 增加20%的进度要求
+                
+                // 检查是否需要提升点击收益（每5级）
+                if (gameState.level % 5 === 0) {
+                    gameState.originalClickValue += 1;
+                    gameState.clickValue = gameState.doubleCardActive ? gameState.originalClickValue * 2 : gameState.originalClickValue;
+                    bonusInfo.style.display = "block";
+                    bonusInfo.classList.add('power-up');
+                    setTimeout(() => {
+                        bonusInfo.classList.remove('power-up');
+                    }, 500);
+                }
+                
+                // 检查是否需要掉落奖励（每5级）
+                if (gameState.level % 5 === 0) {
+                    handleRewardDrop();
+                }
+                
+                // 等级提升动画
+                levelDisplay.classList.add('level-up');
+                setTimeout(() => {
+                    levelDisplay.classList.remove('level-up');
+                }, 500);
+                
+                // 创建庆祝特效
+                createConfetti();
+            }
+            
+            updateDisplay();
+        }
+        
+        // 创建庆祝特效
+        function createConfetti() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196F3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'];
+            const container = document.querySelector('.container');
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.top = `${-10}px`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                container.appendChild(confetti);
+                
+                // 动画
+                const animation = confetti.animate([
+                    { 
+                        transform: `translate(0, 0) rotate(0deg)`,
+                        opacity: 1
+                    },
+                    { 
+                        transform: `translate(${Math.random() * 200 - 100}px, ${window.innerHeight}px) rotate(${Math.random() * 720}deg)`,
+                        opacity: 0
+                    }
+                ], {
+                    duration: 1000 + Math.random() * 2000,
+                    easing: 'cubic-bezier(0.215, 0.61, 0.355, 1)'
+                });
+                
+                // 动画结束后移除元素
+                animation.onfinish = () => {
+                    confetti.remove();
+                };
+            }
+        }
+        
+        // 打开管理员面板
+        function openAdminPanel() {
+            overlay.style.display = 'block';
+            adminPanel.style.display = 'block';
+            adminCommand.focus();
+        }
+        
+        // 关闭管理员面板
+        function closeAdminPanel() {
+            overlay.style.display = 'none';
+            adminPanel.style.display = 'none';
+            adminCommand.value = '';
+        }
+        
+        // 执行管理员命令
+        function executeAdminCommand() {
+            const command = adminCommand.value.trim().toLowerCase();
+            
+            if (command === 'gamemode admin') {
+                adminMode = true;
+                showRewardNotification(0, "管理员模式已激活！");
+                closeAdminPanel();
+            } 
+            else if (adminMode) {
+                // 解析管理员命令
+                const parts = command.split(' ');
+                
+                if (parts.length >= 2) {
+                    const action = parts[0];
+                    const value = parseInt(parts[1]);
+                    
+                    if (!isNaN(value)) {
+                        if (action === 'setlevel') {
+                            gameState.level = value;
+                            showRewardNotification(0, `等级已设置为 ${gameState.level}`);
+                        } 
+                        else if (action === 'setdiamonds') {
+                            gameState.diamonds = value;
+                            showRewardNotification(0, `钻石已设置为 ${gameState.diamonds}`);
+                        }
+                        else if (action === 'setprogress') {
+                            gameState.progress = value;
+                            showRewardNotification(0, `进度已设置为 ${gameState.progress}%`);
+                        }
+                        else {
+                            showRewardNotification(0, "未知命令");
+                        }
+                    } else {
+                        showRewardNotification(0, "无效数值");
+                    }
+                } else {
+                    showRewardNotification(0, "命令格式错误");
+                }
+            } else {
+                showRewardNotification(0, "需要先激活管理员模式");
+            }
+            
+            updateDisplay();
+        }
+        
+        // 添加事件监听
+        clickButton.addEventListener('mousedown', handleHoldStart);
+        clickButton.addEventListener('touchstart', handleHoldStart);
+        clickButton.addEventListener('mouseup', handleHoldEnd);
+        clickButton.addEventListener('touchend', handleHoldEnd);
+        clickButton.addEventListener('mouseleave', handleHoldEnd);
+        doubleCardButton.addEventListener('click', activateDoubleCard);
+        pointsCardButton.addEventListener('click', usePointsCard);
+        executeCommand.addEventListener('click', executeAdminCommand);
+        closeAdmin.addEventListener('click', closeAdminPanel);
+        resetButton.addEventListener('click', resetGameState);
+        
+        // 添加键盘事件监听
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 't') {
+                openAdminPanel();
+            }
+        });
+        
+        // 页面加载时自动加载游戏状态
+        window.addEventListener('load', loadGameState);
+        
+        // 定期更新CPS显示
+        setInterval(() => {
+            calculateCPS();
+            updateDisplay();
+        }, 500);
+        
+        // 初始显示
+        updateDisplay();
+    </script>
+</body>
+</html>
